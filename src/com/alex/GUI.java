@@ -6,7 +6,6 @@ import com.alex.state.ConnectionState;
 import com.alex.state.NotConnectState;
 
 import javax.swing.*;
-import java.io.IOException;
 
 /**
  * Created by Alex on 06.02.2018.
@@ -40,7 +39,7 @@ public class GUI {
     private int loginW = 120, loginH = 25, loginX = 90, loginY = 30, loginLabelX = 10;
 
     FTPRequests ftpRequests;
-    private ConnectionState state;
+    private ConnectionState connectionState;
     JTextArea mainTextArea;
     //ComandExecutor comandExecutor=new ComandExecutor();
     JTextArea displayDir = new JTextArea();
@@ -62,10 +61,10 @@ public class GUI {
     NotConnectState notConnectState;
 
     public void changeState(){
-        if(state instanceof NotConnectState)
-            state=alredyConnectState;
-        else if (state instanceof AlredyConnectState)
-            state=notConnectState;
+        if(connectionState instanceof NotConnectState)
+            connectionState =alredyConnectState;
+        else if (connectionState instanceof AlredyConnectState)
+            connectionState =notConnectState;
     }
 
     public GUI(FTPRequests ftpRequests) {
@@ -77,16 +76,12 @@ public class GUI {
         createGUIitemsForWorkingWihtFiles();
         addListnersToButtons();
         mainTextArea=createLogTextArea();
-        //ftpRequests.setTextArea(createLogTextArea());
         jFrame.setBounds(400, 0, 800, 800);
         jFrame.setVisible(true);
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         ftpRequests.addObserverToObservable(new TextAreaObserver(mainTextArea));
-        state=new NotConnectState(this,ftpRequests);
-
-        //    jFrame.update(jFrame.getGraphics());
-        //  jFrame.update(jFrame.getGraphics());
+        connectionState =new NotConnectState(this,ftpRequests);
     }
 
     private void createGUIitemsForConnecting() {
@@ -176,8 +171,6 @@ public class GUI {
         display.setEditable(false);
         JScrollPane scroll = new JScrollPane(display);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-        // display.setBounds(300,200,400,400);
         scroll.setBounds(280, 120, 400, 400);
         jFrame.add(scroll);
         return display;
@@ -185,79 +178,26 @@ public class GUI {
 
     private void addListnersToButtons() {
         connectButton.addActionListener(a -> {
-            state.autorization(ipField.getText(), Integer.parseInt(portField.getText()),loginField.getText(), passwordField.getText());
-               /* boolean isCreated=ftpRequests.getConnectionHandler().createConnection(ipField.getText(), Integer.parseInt(portField.getText()));
-                if(isCreated) {
-
-                    signInComand.setLoginAndPassword(loginField.getText(), passwordField.getText());
-
-                    comandExecutor.addCommand(signInComand);
-                    comandExecutor.addCommand(new GetFilesComand(ftpRequests, new ExecuteAction() {
-                        @Override
-                        public void getData(String str) {
-                            displayDir.append(str);
-                        }
-
-                        @Override
-                        public void getResponse(String res) {
-                            mainTextArea.append("-> "+res);
-                        }
-                    }));
-                    comandExecutor.addCommand(new GetCurrentDirComand(ftpRequests, new ExecuteAction() {
-                        @Override
-                        public void getData(String str) {
-                            curDirString=str;
-                            curDirArea.setText("current directory: " + curDirString);
-                        }
-
-                        @Override
-                        public void getResponse(String res) {
-                            mainTextArea.append("-> "+res);
-                        }
-                    }));
-                    try {
-                        comandExecutor.executeAll();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }*/
-            //   displayDir.setText(ftpRequests.list());
-            //  curDirString = ftpRequests.pwd();
-            // curDirArea.setText("current directory: " + curDirString);
+            connectionState.autorization(ipField.getText(), Integer.parseInt(portField.getText()),loginField.getText(), passwordField.getText());
         });
-
         exitButton.addActionListener(a -> {
-            state.closeConnection();
+            connectionState.closeConnection();
         });
         downLoadBtn.addActionListener(a -> {
-            state.downLoadFile(downLoadfield.getText());
+            connectionState.downLoadFile(downLoadfield.getText());
         });
         goToDirBtn.addActionListener(a -> {
-            state.goToDir(curDirString + "/" + goToDirField.getText());
-            /*ftpRequests.cwd(curDirString + "/" + goToDirField.getText());
-            curDirString = ftpRequests.pwd();
-            curDirArea.setText("current directory: " + curDirString);
-            displayDir.setText(ftpRequests.list());*/
+            connectionState.goToDir(curDirString + "/" + goToDirField.getText());
         });
-/*
         goToThePreviousDirBtn.addActionListener(a -> {
-            try {
-                ftpRequests.cdUp();
-                curDirString = ftpRequests.pwd();
-                curDirArea.setText("current directory: " + curDirString);
-                displayDir.setText(ftpRequests.list());
-            } catch (IOException e) {
-                System.err.println("Ошибка подключения");
-            }
+            connectionState.goUpDir();
         });
-
         delete.addActionListener(a -> {
-            ftpRequests.delete(deleteFilefield.getText());
+            connectionState.deleteFile(deleteFilefield.getText());
         });
         upLoad.addActionListener(a -> {
-            ftpRequests.setAscii();
-            ftpRequests.stor(new File(upLoadfield.getText()));
-        });*/
+            connectionState.upLoadFile(upLoadfield.getText());
+        });
     }
 }
 

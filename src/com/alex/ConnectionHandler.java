@@ -50,8 +50,7 @@ public class ConnectionHandler {
             }
     }
 
-    public void downloadFile(String ip,int port, String fileName) throws IOException {
-        Socket socket=new Socket(ip,port);
+    public void downloadFile(Socket socket, String fileName) throws IOException {
         DataInputStream dis = new DataInputStream(socket.getInputStream());
         FileOutputStream fos = new FileOutputStream(fileName);
         byte[] buffer = new byte[4096];

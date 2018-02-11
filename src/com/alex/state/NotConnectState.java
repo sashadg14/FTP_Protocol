@@ -11,32 +11,33 @@ import java.io.IOException;
 /**
  * Created by Alex on 11.02.2018.
  */
-public class NotConnectState implements ConnectionState{
+public class NotConnectState implements ConnectionState {
     FTPRequests ftpRequests;
     GUI gui;
     ResponsesUtils responsesUtils;
-    public NotConnectState(GUI gui,FTPRequests ftpRequests) {
+
+    public NotConnectState(GUI gui, FTPRequests ftpRequests) {
         this.gui = gui;
-        responsesUtils=new ResponsesUtils();
-        this.ftpRequests=ftpRequests;
+        responsesUtils = new ResponsesUtils();
+        this.ftpRequests = ftpRequests;
     }
 
     @Override
     public void autorization(String ip, int port, String username, String password) {
-        boolean bool=ftpRequests.getConnectionHandler().createConnection(ip,port);
-        if(bool){
+        boolean bool = ftpRequests.getConnectionHandler().createConnection(ip, port);
+        if (bool) {
             try {
                 gui.addStrintToLog(ftpRequests.sendUSER(username));
                 gui.addStrintToLog(ftpRequests.sendPASSWORD(password));
-                String s=ftpRequests.sendPASV();
+                String s = ftpRequests.sendPASV();
                 gui.addStrintToLog(s);
                 gui.addStrintToLog(ftpRequests.sendLIST());
-                String files=getFiles(s);
+                String files = getFiles(s);
                 gui.addStrintToLog(files);
                 gui.addStrintToLog(ftpRequests.getResponseLine());
                 gui.addStrintToLog(ftpRequests.getResponseLine());
                 gui.setFilesStr(files);
-                String curDirResp=ftpRequests.sendPWD();
+                String curDirResp = ftpRequests.sendPWD();
                 gui.addStrintToLog(curDirResp);
                 gui.setCurrendDirectory(responsesUtils.getCurrentDir(curDirResp));
                 gui.changeState();
@@ -49,8 +50,9 @@ public class NotConnectState implements ConnectionState{
     private String getFiles(String response) throws IOException {
         String ip = responsesUtils.getIpFromResponse(response);
         int port = responsesUtils.getPortFromResponse(response);
-        return ftpRequests.getAllFiles(ip,port);
+        return ftpRequests.getAllFiles(ip, port);
     }
+
     @Override
     public void goToDir(String string) {
         showMessage();
@@ -68,12 +70,12 @@ public class NotConnectState implements ConnectionState{
 
     @Override
     public void deleteFile(String fileName) {
-
+        showMessage();
     }
 
     @Override
     public void goUpDir() {
-
+        showMessage();
     }
 
     @Override
@@ -81,7 +83,7 @@ public class NotConnectState implements ConnectionState{
         showMessage();
     }
 
-    private void showMessage(){
+    private void showMessage() {
         JOptionPane.showMessageDialog(null, "Вы не авторизованы");
     }
 }
