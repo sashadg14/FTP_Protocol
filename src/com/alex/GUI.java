@@ -1,7 +1,11 @@
 package com.alex;
 
+import com.alex.observers.TextAreaObserver;
+import com.alex.state.AlredyConnectState;
+import com.alex.state.ConnectionState;
+import com.alex.state.NotConnectState;
+
 import javax.swing.*;
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -9,46 +13,78 @@ import java.io.IOException;
  */
 
 public class GUI {
-    JFrame jFrame = new JFrame("FTP Client");
-    JTextField loginField = new JTextField();
-    JTextField passwordField = new JTextField();
-    JTextField ipField = new JTextField();
-    JTextField portField = new JTextField();
+    private JFrame jFrame = new JFrame("FTP Client");
+    private JTextField loginField = new JTextField();
+    private JTextField passwordField = new JTextField();
+    private JTextField ipField = new JTextField();
+    private JTextField portField = new JTextField();
 
-    JLabel loginLabel = new JLabel("Login");
-    JLabel passwordLabel = new JLabel("Password");
-    JLabel ipLabel = new JLabel("IP");
-    JLabel portLabel = new JLabel("Port");
+    private JLabel loginLabel = new JLabel("Login");
+    private JLabel passwordLabel = new JLabel("Password");
+    private JLabel ipLabel = new JLabel("IP");
+    private JLabel portLabel = new JLabel("Port");
 
-    JButton connectButton = new JButton("Connect");
-    JButton exitButton = new JButton("Exit");
-    JButton goToDirBtn = new JButton("Go to dir: ");
-    JButton goToThePreviousDirBtn = new JButton("Up dir");
-    JButton upLoad = new JButton("Upload");
-    JButton downLoadBtn = new JButton("Download");
-    JButton delete = new JButton("Delete");
+    private JButton connectButton = new JButton("Connect");
+    private JButton exitButton = new JButton("Exit");
+    private JButton goToDirBtn = new JButton("Go to dir: ");
+    private JButton goToThePreviousDirBtn = new JButton("Up dir");
+    private JButton upLoad = new JButton("Upload");
+    private JButton downLoadBtn = new JButton("Download");
+    private JButton delete = new JButton("Delete");
 
-    JTextField upLoadfield = new JTextField();
-    JTextField downLoadfield = new JTextField();
-    JTextField goToDirField = new JTextField();
-    JTextField deleteFilefield = new JTextField();
-    String curDirString;
-    int loginW = 120, loginH = 25, loginX = 90, loginY = 30, loginLabelX = 10;
+    private JTextField upLoadfield = new JTextField();
+    private JTextField downLoadfield = new JTextField();
+    private JTextField goToDirField = new JTextField();
+    private JTextField deleteFilefield = new JTextField();
+    private String curDirString;
+    private int loginW = 120, loginH = 25, loginX = 90, loginY = 30, loginLabelX = 10;
 
-    FTPRequests ftpRequests = new FTPRequests();
-
+    FTPRequests ftpRequests;
+    private ConnectionState state;
+    JTextArea mainTextArea;
+    //ComandExecutor comandExecutor=new ComandExecutor();
     JTextArea displayDir = new JTextArea();
     JLabel curDirArea = new JLabel();
 
-    public GUI() {
+    public void addStrintToLog(String s){
+        mainTextArea.append("-> "+s);
+    }
+    public void setFilesStr(String str){
+        displayDir.setText(str);
+    }
+
+    public void setCurrendDirectory(String dir){
+        curDirString=dir;
+        curDirArea.setText("current directory: " + curDirString);
+    }
+
+    AlredyConnectState alredyConnectState;
+    NotConnectState notConnectState;
+
+    public void changeState(){
+        if(state instanceof NotConnectState)
+            state=alredyConnectState;
+        else if (state instanceof AlredyConnectState)
+            state=notConnectState;
+    }
+
+    public GUI(FTPRequests ftpRequests) {
+        alredyConnectState=new AlredyConnectState(this,ftpRequests);
+        notConnectState=new NotConnectState(this,ftpRequests);
+        this.ftpRequests=ftpRequests;
         jFrame.setLayout(null);
         createGUIitemsForConnecting();
         createGUIitemsForWorkingWihtFiles();
         addListnersToButtons();
-        ftpRequests.setTextArea(createLogTextArea());
+        mainTextArea=createLogTextArea();
+        //ftpRequests.setTextArea(createLogTextArea());
         jFrame.setBounds(400, 0, 800, 800);
         jFrame.setVisible(true);
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        ftpRequests.addObserverToObservable(new TextAreaObserver(mainTextArea));
+        state=new NotConnectState(this,ftpRequests);
+
         //    jFrame.update(jFrame.getGraphics());
         //  jFrame.update(jFrame.getGraphics());
     }
@@ -149,29 +185,61 @@ public class GUI {
 
     private void addListnersToButtons() {
         connectButton.addActionListener(a -> {
-            new Thread(() -> {
-                ftpRequests.connect(ipField.getText(), Integer.parseInt(portField.getText()), loginField.getText(), passwordField.getText());
-                displayDir.setText(ftpRequests.list());
-                curDirString = ftpRequests.pwd();
-                curDirArea.setText("current directory: " + curDirString);
-            }).start();
+            state.autorization(ipField.getText(), Integer.parseInt(portField.getText()),loginField.getText(), passwordField.getText());
+               /* boolean isCreated=ftpRequests.getConnectionHandler().createConnection(ipField.getText(), Integer.parseInt(portField.getText()));
+                if(isCreated) {
+
+                    signInComand.setLoginAndPassword(loginField.getText(), passwordField.getText());
+
+                    comandExecutor.addCommand(signInComand);
+                    comandExecutor.addCommand(new GetFilesComand(ftpRequests, new ExecuteAction() {
+                        @Override
+                        public void getData(String str) {
+                            displayDir.append(str);
+                        }
+
+                        @Override
+                        public void getResponse(String res) {
+                            mainTextArea.append("-> "+res);
+                        }
+                    }));
+                    comandExecutor.addCommand(new GetCurrentDirComand(ftpRequests, new ExecuteAction() {
+                        @Override
+                        public void getData(String str) {
+                            curDirString=str;
+                            curDirArea.setText("current directory: " + curDirString);
+                        }
+
+                        @Override
+                        public void getResponse(String res) {
+                            mainTextArea.append("-> "+res);
+                        }
+                    }));
+                    try {
+                        comandExecutor.executeAll();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+            //   displayDir.setText(ftpRequests.list());
+            //  curDirString = ftpRequests.pwd();
+            // curDirArea.setText("current directory: " + curDirString);
         });
 
         exitButton.addActionListener(a -> {
-            ftpRequests.disconnect();
+            state.closeConnection();
         });
-
         downLoadBtn.addActionListener(a -> {
-            ftpRequests.setAscii();
-            ftpRequests.retr(downLoadfield.getText());
+            state.downLoadFile(downLoadfield.getText());
         });
         goToDirBtn.addActionListener(a -> {
-            ftpRequests.cwd(curDirString + "/" + goToDirField.getText());
+            state.goToDir(curDirString + "/" + goToDirField.getText());
+            /*ftpRequests.cwd(curDirString + "/" + goToDirField.getText());
             curDirString = ftpRequests.pwd();
             curDirArea.setText("current directory: " + curDirString);
-            displayDir.setText(ftpRequests.list());
+            displayDir.setText(ftpRequests.list());*/
         });
-
+/*
         goToThePreviousDirBtn.addActionListener(a -> {
             try {
                 ftpRequests.cdUp();
@@ -189,7 +257,7 @@ public class GUI {
         upLoad.addActionListener(a -> {
             ftpRequests.setAscii();
             ftpRequests.stor(new File(upLoadfield.getText()));
-        });
+        });*/
     }
 }
 

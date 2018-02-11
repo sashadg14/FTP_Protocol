@@ -1,39 +1,91 @@
 package com.alex;
 
+import com.alex.ConnectionHandler;
+import com.alex.observers.ComandSenderObserver;
+import com.alex.observers.Observable;
+import com.alex.observers.Observer;
+
 import javax.swing.*;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.Socket;
+import java.io.*;
+
 
 /**
  * Created by Alex on 06.02.2018.
  */
 public class FTPRequests {
-    ConnectionHandler connectionHandler = new ConnectionHandler();
-    JTextArea textArea;
+    ConnectionHandler connectionHandler;
+    Observable observable=new Observable();
 
-    public void setTextArea(JTextArea textArea) {
-        this.textArea = textArea;
+    public FTPRequests() {
+        this.connectionHandler=new ConnectionHandler();
+        observable.addObserver( new ComandSenderObserver(connectionHandler));
     }
 
-    public synchronized void connect(String host, int port, String userName, String password) {
-        if (connectionHandler.createConnection(host, port)) {
-            try {
-                connectionHandler.sendLine("USER " + userName);
-                textArea.append("<- USER " + userName + "\n");
-                textArea.append("-> " + connectionHandler.readLine() + "\n");
-                textArea.append("->" + connectionHandler.readLine() + "\n");
-                connectionHandler.sendLine("PASS " + password);
-                textArea.append("<- PASS " + password + "\n");
-                textArea.append("->" + connectionHandler.readLine() + "\n");
-            } catch (IOException e) {
-                System.err.println("Ошибка при авторизации");
-            }
-        } else System.err.println("Ошибка создания нового соединения");
+    public void addObserverToObservable(Observer observer){
+        observable.addObserver(observer);
     }
 
+    public ConnectionHandler getConnectionHandler() {
+        return connectionHandler;
+    }
+
+    public String sendUSER(String userName) throws IOException {
+        String response="";
+        observable.sendCommand("USER " + userName);
+        response+=connectionHandler.readLine() + "\n";
+        response+=connectionHandler.readLine() + "\n";
+        return response;
+    }
+
+    public String sendPASSWORD(String password) throws IOException {
+        String response="";
+        observable.sendCommand("PASS " + password);
+        response+=connectionHandler.readLine() + "\n";
+        return response;
+    }
+
+    public String sendPASV() throws IOException {
+        observable.sendCommand("PASV");
+        String response = connectionHandler.readLine()+"\n";
+        return response;
+    }
+
+    public String sendLIST() throws IOException {
+        observable.sendCommand("LIST");
+        String response = "";
+        return response;
+    }
+
+    public String sendPWD() throws IOException {
+        observable.sendCommand("PWD");
+        return connectionHandler.readLine()+"\n";
+    }
+
+    public String getResponseLine() throws IOException {
+        return connectionHandler.readLine()+"\n";
+    }
+    public String getAllFiles(String ip, int port) throws IOException {
+        return connectionHandler.getStrFilesFromServer(ip,port);
+    }
+
+    public String sendCWD(String dir) throws IOException {
+        observable.sendCommand("CWD "+dir);
+        return connectionHandler.readLine();
+    }
+
+    public void sendRETR(String filename) throws IOException {
+        observable.sendCommand("RETR "+filename);
+    }
+    public String sendTYPE_A() throws IOException {
+        observable.sendCommand("TYPE A");
+        return connectionHandler.readLine();
+    }
+    public void sendQUIT() throws IOException {
+        observable.sendCommand("QUIT");
+    }
+
+
+/*
     public synchronized String list() {
         String filesStr = "";
         if (connectionHandler.checkConnection())
@@ -181,5 +233,5 @@ public class FTPRequests {
             } catch (IOException e) {
                 System.out.println("Ошибка при отправке файлa");
             }
-    }
+    }*/
 }

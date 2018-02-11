@@ -7,6 +7,7 @@ import java.io.IOException;
  */
 public class EntryPoint {
     public static void main(String[] args) throws IOException {
-        new GUI();
+        FTPRequests ftpRequests=new FTPRequests();
+        new GUI(ftpRequests);
     }
 }

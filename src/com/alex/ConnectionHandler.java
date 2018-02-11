@@ -50,8 +50,9 @@ public class ConnectionHandler {
             }
     }
 
-    public void downloadFile(Socket clientSock, String fileName) throws IOException {
-        DataInputStream dis = new DataInputStream(clientSock.getInputStream());
+    public void downloadFile(String ip,int port, String fileName) throws IOException {
+        Socket socket=new Socket(ip,port);
+        DataInputStream dis = new DataInputStream(socket.getInputStream());
         FileOutputStream fos = new FileOutputStream(fileName);
         byte[] buffer = new byte[4096];
         int read = 0;
@@ -62,26 +63,21 @@ public class ConnectionHandler {
         dis.close();
     }
 
-    public Socket createDataConnectionFromPASV(String response) {
-        String ip = null;
-        int port = 0;
-        int opening = response.indexOf('(');
-        int closing = response.indexOf(')', opening + 1);
-        if (closing > 0) {
-            String dataLink = response.substring(opening + 1, closing);
-            StringTokenizer tokenizer = new StringTokenizer(dataLink, ",");
-            ip = tokenizer.nextToken() + "." + tokenizer.nextToken() + "."
-                    + tokenizer.nextToken() + "." + tokenizer.nextToken();
-            port = Integer.parseInt(tokenizer.nextToken()) * 256
-                    + Integer.parseInt(tokenizer.nextToken());
-        }
+    public String getStrFilesFromServer(String ip,int port) throws IOException {
         Socket socket = null;
         try {
             socket = new Socket(ip, port);
         } catch (IOException e) {
             System.err.println("Ошибка создания потока данных от сервера");
         }
-        return socket;
+        byte[] buffer = new byte[4096];
+        String buf = "";
+        BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
+        while ((input.read(buffer)) != -1) {
+            buf += new String(buffer) + "\n";
+        }
+        input.close();
+        return buf;
     }
 
     public void sendFile(OutputStream output, InputStream inputStream, String filename) throws IOException {
